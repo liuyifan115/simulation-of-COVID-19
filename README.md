@@ -6,7 +6,7 @@
 3. infect_ratio = 3 || 10 || 50 / day
 4. infect_process = COVID-19_2.pdf
 5. shelter_size = 1000
-6. shelter_number = infectedelter_size + 1
+6. shelter_number = infected/shelter_size + 1
 7. shelter_time = 7 days/person
 8. cost_of_shelter = 200 RMB/(day, person)
 9. shelter collecting rate & ratio?? self estimated via 4.
