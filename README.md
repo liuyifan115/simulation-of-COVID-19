@@ -27,14 +27,6 @@ According to the given information, I make following assumptions:
 5. shelterTime = 7 
 6. The person who has been infected will be sent to shelter after less than one day
 7. simple mode **OR** complex mode
-
-
-## Simple mode
-Nothing special
-
-## Complex mode
-1. symptomaticRate = 0.025
-2. Only symptomatic person will be sent to the shelter. The asymptomatic infections will stay at home and his/hers infectRation will reduce to 0.001
-3. If the number of infected persons is more than one third of totalPopulation(1 000 000), the city will be locked down
+8. If the number of infected persons is more than one third of totalPopulation(1 000 000), the city will be locked down
 
 
