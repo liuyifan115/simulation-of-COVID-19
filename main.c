@@ -36,6 +36,7 @@ void shelterUpdate(int );//和方舱数据有关的函数
 void infectRatioUpdate(int );//更新感染率的函数
 int getShelterTotal(int);//获取一个方舱内有多少人的函数
 void writeData(int );//写文件函数
+void whatIWant();//这又是什么鬼？
 
 int main(){
     //创建目录来存放输出文件
@@ -79,8 +80,9 @@ int main(){
         printf("%-12d%-12lu%-12lu%-12lu%-12lu%-12lu%-12llu%-12llu\n",day+1,data[day].health,data[day].infected,data[day].inShelter,data[day].notInShelter,data[day].cured,data[day].cost,data[day].lockdownCost);
         writeData(day);
     }
+    whatIWant();
     system("pause");
-
+    return 0;
 }
 
 //初始化数据，其实就是创造一个感染者
@@ -249,5 +251,26 @@ void writeData(int day){
     sprintf(filename,"./output/cost_of_lock_down_population_day/cost_of_lock_down_population_day_%d.txt",day+1); //通过sprintf来切换日期
     fp = fopen(filename,"w");
     fprintf(fp,"%llu",data[day].lockdownCost);
+    fclose(fp);
+}
+
+void whatIWant(){
+    FILE *fp = fopen("./output/I_want_this.csv","w");
+    for (int i = 0; i < 29; ++i) {
+        fprintf(fp,"%d,",i+1);
+    }
+    fprintf(fp,"%d\n",30);
+    for (int i = 0; i < 29; ++i) {
+        fprintf(fp,"%lu,",data[i].infected);
+    }
+    fprintf(fp,"%lu\n",data[29].infected);
+    for (int i = 0; i < 29; ++i) {
+        fprintf(fp,"%lu,",data[i].inShelter);
+    }
+    fprintf(fp,"%lu\n",data[29].inShelter);
+    for (int i = 0; i < 29; ++i) {
+        fprintf(fp,"%llu,",data[i].cost+data[i].lockdownCost);
+    }
+    fprintf(fp,"%llu\n",data[29].cost+data[29].lockdownCost);
     fclose(fp);
 }
