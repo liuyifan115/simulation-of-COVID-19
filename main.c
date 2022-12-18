@@ -41,10 +41,6 @@ void whatIWant();//这又是什么鬼？
 int main(){
     //创建目录来存放输出文件
     system("mkdir output");
-    system("mkdir output/infected_day");
-    system("mkdir output/cost_of_lock_down_population_day");
-    system("mkdir output/shelter_day");
-    system("mkdir output/total_cost_day");
 
     //自定义感染率
     double ration;
@@ -208,7 +204,7 @@ void writeData(int day){
     for (int j = 0; j < 100; ++j) { //清空filename字符串
         filename[j] = 0;
     }
-    sprintf(filename,"./output/shelter_day/shelter_day_%d.txt",day+1); //通过sprintf来切换日期
+    sprintf(filename,"./output/shelter_day_%d.txt",day+1); //通过sprintf来切换日期
     FILE *fp = fopen(filename,"w");
     fprintf(fp,"Day %d:\n",day+1);
     fprintf(fp,"ID\tDaysStayedIn(0..6)\n");
@@ -230,7 +226,7 @@ void writeData(int day){
     for (int j = 0; j < 100; ++j) { //清空filename字符串
         filename[j] = 0;
     }
-    sprintf(filename,"./output/total_cost_day/total_cost_day_%d.txt",day+1); //通过sprintf来切换日期
+    sprintf(filename,"./output/total_cost_day_%d.txt",day+1); //通过sprintf来切换日期
     fp = fopen(filename,"w");
     fprintf(fp,"%llu",data[day].cost+data[day].lockdownCost);
     fclose(fp);
@@ -239,7 +235,7 @@ void writeData(int day){
     for (int j = 0; j < 100; ++j) { //清空filename字符串
         filename[j] = 0;
     }
-    sprintf(filename,"./output/infected_day/infected_day_%d.txt",day+1); //通过sprintf来切换日期
+    sprintf(filename,"./output/infected_day_%d.txt",day+1); //通过sprintf来切换日期
     fp = fopen(filename,"w");
     fprintf(fp,"%lu",data[day].infected);
     fclose(fp);
@@ -248,7 +244,7 @@ void writeData(int day){
     for (int j = 0; j < 100; ++j) { //清空filename字符串
         filename[j] = 0;
     }
-    sprintf(filename,"./output/cost_of_lock_down_population_day/cost_of_lock_down_population_day_%d.txt",day+1); //通过sprintf来切换日期
+    sprintf(filename,"./output/cost_of_lock_down_population_day_%d.txt",day+1); //通过sprintf来切换日期
     fp = fopen(filename,"w");
     fprintf(fp,"%llu",data[day].lockdownCost);
     fclose(fp);
