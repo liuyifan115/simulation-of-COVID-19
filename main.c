@@ -13,6 +13,7 @@ typedef struct {
     unsigned long infected; //已经有多少人感染了
     unsigned long cured; //已经有多少人治愈了
     unsigned long inShelter; //在方舱里面的人数
+    unsigned long inHome; //居家隔离的人数
     unsigned long notInShelter; //未在方舱里面但是已经感染的人数
     unsigned long long cost; //方舱的花费
     unsigned long long lockdownCost; //封城的花费
@@ -46,11 +47,14 @@ DATA day0 = {3000000, 0, 0, 0, 0,0,0};//这是初始的数据
 DATA data[30] = {};//这是30天，按每一天存放的数据
 
 //这边是各种函数
+void settings();//程序设置
+void consoleOutput(int );//控制台输出
 void dataInit();//数据初始化函数
 void infectionUpdate(int );//感染函数
 void shelterUpdate(int );//和方舱数据有关的函数
 void infectRatioUpdate(int );//更新感染率的函数
 int getShelterTotal(int);//获取一个方舱内有多少人的函数
+unsigned long getInHome(int );//这计算真烦😡
 void writeData(int );//写文件函数
 void whatIWant();//这又是什么鬼？
 
@@ -58,6 +62,41 @@ int main(){
     //创建目录来存放输出文件
     system("mkdir output");
 
+    //程序设置
+    settings();
+
+    //初始化数据
+    dataInit();
+
+    //控制台输出，用于调试
+    printf("%-12s%-12s%-12s%-12s%-12s%-12s%-12s%-12s%-12s\n"
+           ,"Days"
+           ,"Health"
+           ,"Infected"
+           ,"InShelter"
+           ,"InHome"
+           ,"NotInShelter"
+           ,"Cured"
+           ,"Cost"
+           ,"LockdownCost"
+           );
+    consoleOutput(0);
+
+    writeData(0);
+    //用循环模拟30天的数据
+    for (int day = 1; day < globe.days; ++day) {
+        infectionUpdate(day);
+        shelterUpdate(day);
+        infectRatioUpdate(day);
+        consoleOutput(day);
+        writeData(day);
+    }
+    whatIWant();
+    system("pause");
+    return 0;
+}
+
+void settings(){
     //设定模拟天数
     printf("How many days will the simulation last:");
     scanf("%d",&globe.days);
@@ -106,26 +145,20 @@ int main(){
     //保存自定义数据
     infect.what_this = ration;
     infect.infectRatio = ration;
+}
 
-    //初始化数据
-    dataInit();
-
-    //控制台输出，用于调试
-    printf("%-12s%-12s%-12s%-12s%-12s%-12s%-12s%-12s\n","Days","Health","Infected","InShelter","NotInShelter","Cured","Cost","LockdownCost");
-    printf("%-12d%-12lu%-12lu%-12lu%-12lu%-12lu%-12llu%-12llu\n",1,globe.data[0].health,globe.data[0].infected,globe.data[0].inShelter,globe.data[0].notInShelter,globe.data[0].cured,globe.data[0].cost,globe.data[0].lockdownCost);
-
-    writeData(0);
-    //用循环模拟30天的数据
-    for (int day = 1; day < globe.days; ++day) {
-        infectionUpdate(day);
-        shelterUpdate(day);
-        infectRatioUpdate(day);
-        printf("%-12d%-12lu%-12lu%-12lu%-12lu%-12lu%-12llu%-12llu\n",day+1,globe.data[day].health,globe.data[day].infected,globe.data[day].inShelter,globe.data[day].notInShelter,globe.data[day].cured,globe.data[day].cost,globe.data[day].lockdownCost);
-        writeData(day);
-    }
-    whatIWant();
-    system("pause");
-    return 0;
+void consoleOutput(int day){
+    printf("%-12d%-12lu%-12lu%-12lu%-12lu%-12lu%-12lu%-12llu%-12llu\n"
+           ,day+1
+           ,globe.data[day].health
+           ,globe.data[day].infected
+           ,globe.data[day].inShelter
+           ,globe.data[day].inHome
+           ,globe.data[day].notInShelter
+           ,globe.data[day].cured
+           ,globe.data[day].cost
+           ,globe.data[day].lockdownCost
+           );
 }
 
 //初始化数据，其实就是创造一个感染者
@@ -133,13 +166,18 @@ void dataInit(){
     globe.data[0].health = day0.health - 1;
     globe.data[0].infected = 1;
     globe.data[0].notInShelter = 1;
+    globe.data[0].cured = 0;
+    globe.data[0].cost = 0;
+    globe.data[0].lockdownCost = 0;
+    globe.data[0].inShelter = 0;
+    globe.data[0].inHome = 0;
 }
 
 //进行感染的过程
 void infectionUpdate(int day){
-
-    //新感染的人数就等于没有进方舱的感染者乘以感染率
-    unsigned long newInfected = (unsigned long)((double)globe.data[day-1].notInShelter * infect.infectRatio);
+    //新感染的人数就等于没有进方舱的感染者乘以感染率加上居家的人数乘以感染率
+    unsigned long newInfected = ((unsigned long)((double)globe.data[day-1].notInShelter * infect.infectRatio))
+                                + ((unsigned long)((double)globe.data[day-1].inHome * prevent.infectRationInHome)) ;
 
     //如果新感染的人数超过了剩余健康人数，那么新感染人数就是剩余的健康人数
     if (globe.data[day-1].health < newInfected){
@@ -154,6 +192,7 @@ void infectionUpdate(int day){
     globe.data[day].inShelter = globe.data[day-1].inShelter;
     globe.data[day].cost = globe.data[day-1].cost;
     globe.data[day].lockdownCost = globe.data[day-1].lockdownCost;
+    globe.data[day].inHome = globe.data[day-1].inHome;
 
     //判断是否要封城
     if (globe.data[day].infected >= prevent.lockdownLimit && prevent.ifLockdown){
@@ -171,17 +210,27 @@ void infectionUpdate(int day){
     }
 }
 
+unsigned long getInHome(int day){
+    if (day < 7){
+        return 0;
+    }
+    return (globe.data[day-8].notInShelter
+            - (unsigned long)((double)globe.data[day-8].notInShelter*prevent.rationInfectedToShelter));
+}
+
 void shelterUpdate(int day){
-    //新治愈的人数等于方舱中出来的人数
+    //新治愈的人数等于方舱中出来的人数和解除居家隔离的人数
     unsigned long newCured = 0;
     for (int i = 0; i < 3000; ++i) {
         newCured += shelter[i].day[6];
     }
+    newCured += getInHome(day);
 
     //将相应数据写入
     globe.data[day].cured += newCured;
     globe.data[day].infected -= newCured;
-    globe.data[day].inShelter -= newCured;
+    globe.data[day].inShelter -= (newCured - getInHome(day));
+    globe.data[day].inHome -= getInHome(day);
 
     //方舱中病人的累计天数增长一天
     for (int i = 0; i < 3000; ++i) {
@@ -192,10 +241,13 @@ void shelterUpdate(int day){
         shelter[i].total = getShelterTotal(i);
     }
 
-    //因为设置为感染后第二天被送往方舱，所以当天送到方舱的人数应该是上一天未进方舱的感染人数
-    unsigned long newInShelter = globe.data[day-1].notInShelter;
+    //因为设置为感染后第二天被送往方舱，所以当天送到方舱的人数应该是上一天未进方舱的感染人数乘以送进方舱的比例
+    unsigned long newInShelter = (unsigned long)((double)globe.data[day-1].notInShelter*prevent.rationInfectedToShelter);
     globe.data[day].inShelter += newInShelter;
     globe.data[day].notInShelter -= newInShelter;
+
+    //送去居家隔离
+    globe.data[day].inHome += globe.data[day-1].notInShelter - newInShelter;
 
     //从第一个方舱开始收治感染者
     for (int i = 0; i < 3000; ++i) {
@@ -229,9 +281,9 @@ void infectRatioUpdate(int day){
     //因为默认感染之后无法再次被感染，而已经被感染的也无法被感染，所以感染率会随着健康人数的下降有所下降
     infect.infectRatio = infect.what_this * ((double)globe.data[day].health / (double)(globe.data[day].health + globe.data[day].cured + globe.data[day].infected));
 
-    //如果封城的话，就讲感染率下降到0.1
+    //如果封城的话，就讲感染率下降到对应设置的感染率
     if (prevent.ifLockedDown && prevent.ifLockdown){
-        infect.infectRatio = 0.1;
+        infect.infectRatio = prevent.infectRationInHome;
     }
 }
 
