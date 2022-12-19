@@ -1,6 +1,5 @@
 #include "stdio.h"
 #include "stdlib.h"
-#include "string.h"
 
 //这是定义的方舱的数据类型，病人会在里面待7天，
 typedef struct shelter{
@@ -41,7 +40,6 @@ void whatIWant();//这又是什么鬼？
 int main(){
     //创建目录来存放输出文件
     system("mkdir output");
-
     //自定义感染率
     double ration;
     printf("Set your infect ration:");
