@@ -38,17 +38,17 @@ struct {
     int infectedAgainLimit;//几天后可以再次被感染
 
     DATA *data;//数据存放的地方
-} settings = {50,
-              2.8,
-              2.8,
-              0,
-              0,
-              0,
-              0,
-              0.5,
-              0.1,
+} settings = {30,
+              2.5,
+              2.5,
               1,
-              7,
+              1000000,
+              0,
+              1,
+              0.7,
+              0.05,
+              1,
+              10,
               NULL
 };
 
@@ -57,6 +57,7 @@ SHELTER shelter[3000] = {};//一共有3,000,000人，一个方舱能住1000人，所以3000个足
 DATA day0 = {3000000, 0, 0, 0, 0,0,0};//这是初始的数据
 
 //这边是各种函数
+void readme();//说明
 void setting();//程序设置
 void consoleOutput(int );//控制台输出
 void dataInit();//数据初始化函数
@@ -70,8 +71,10 @@ void writeData(int );//写文件函数
 void whatIWant();//这又是什么鬼？
 
 int main(){
+    readme();
+
     //创建目录来存放输出文件
-//    system("mkdir output");
+    system("mkdir output");
 
     settings.data = (DATA *)malloc(settings.days* sizeof(DATA));
 
@@ -99,33 +102,75 @@ int main(){
         shelterUpdate(day);
         infectRatioUpdate(day);
         consoleOutput(day);
-//        writeData(day);
+        writeData(day);
     }
     whatIWant();
     system("pause");
     return 0;
 }
 
+//说明文档
+void readme(){
+    printf("这是一个模拟新冠感染的软件\n"
+           "如果你安装了python并正确配置了PATH， 请同时将chart.py与程序放在同一目录下，执行完后会自动生成名为\"chart.pdf\"的图表\n"
+           "如果没有，你也可以手动执行chart.py生成\n"
+           "你可以更改软件的参数，当然你也可以使用默认参数,默认参数如下：\n"
+           "模拟30天，感染率为2.5，在感染人数超过1,000,000时会封城\n"
+           "有70%的感染者是居家隔离，剩下的送至方舱，居家隔离以及封城时的感染率降为0.05\n"
+           "同时，感染者在痊愈后10天内不会再次被感染\n"
+           "输入d来使用自定义参数，或者输入其他字符来使用默认参数：");
+    char option;
+    scanf("%c",&option);
+    if (option == 'd' || option == 'D'){
+        system("cls");
+        setting();
+    }
+    else{
+        system("cls");
+    }
+}
+
 //程序设置
 void setting(){
+    //自定义模拟天数
+    printf("请输入你要模拟的天数：");
+    scanf("%d",&settings.days);
+
     //自定义感染率
     double ration;
-    printf("Set your infect ration:");
+    printf("请设置你想要的感染率：");
     scanf("%lf",&ration);
-
-    //选择是否会封城
-    printf("If lockdown (0-false 1-true):");
-    scanf("%d",&settings.ifLockdown);
-
-    //如果会封城，那么感染到多少人会封城
-    if (settings.ifLockdown == 1){
-        printf("When to lockdown:");
-        scanf("%lu",&settings.lockdownLimit);
-    }
-    //保存自定义数据
     settings.what_this = ration;
     settings.infectRatio = ration;
 
+    //选择是否会封城
+    printf("请选择是否会封城(0-false 1-true)：");
+    scanf("%d",&settings.ifLockdown);
+
+    //如果会封城，那么感染到多少人会封城
+    if (settings.ifLockdown){
+        printf("感染人数为多少时封城：");
+        scanf("%lu",&settings.lockdownLimit);
+    }
+
+    //选择是否居家隔离
+    printf("请选择是否居家隔离(0-false 1-true)：");
+    scanf("%d",&settings.ifLockdown);
+
+    if (settings.ifStayAtHome){
+        printf("居家隔离的人数比例：");
+        scanf("%lf",&settings.ratioStayAtHome);
+        printf("居家隔离时的感染率：");
+        scanf("%lf",&settings.infectRatioAtHome);
+    }
+
+    //是否能再次被感染
+    printf("能否被再次感染：");
+    scanf("%d",&settings.ifInfectedAgain);
+    if (settings.ifInfectedAgain){
+        printf("几天后会再次被感染：");
+        scanf("%d",&settings.infectedAgainLimit);
+    }
 }
 
 //控制台输出
@@ -177,6 +222,7 @@ void infectionUpdate(int day){
     settings.data[day].notInShelter = settings.data[day-1].notInShelter + newInfected;
     settings.data[day].infected = settings.data[day-1].infected + newInfected;
     settings.data[day].health = settings.data[day-1].health - newInfected;
+
     settings.data[day].immune = settings.data[day - 1].immune;
     settings.data[day].inShelter = settings.data[day-1].inShelter;
     settings.data[day].cost = settings.data[day-1].cost;
@@ -207,7 +253,6 @@ void shelterUpdate(int day){
         newCured += shelter[i].day[6];
     }
     newCured += stayAtHome(day);
-
     //将相应数据写入
     settings.data[day].immune += newCured;
     settings.data[day].infected -= newCured;
@@ -262,16 +307,19 @@ void shelterUpdate(int day){
 
     //让人能再次被感染
     unsigned newInfect = infectAgain(day);
+
     settings.data[day].immune -= newInfect;
     settings.data[day].health += newInfect;
 }
 
 //计算出能再次被感染的人数
 unsigned long infectAgain(int day){
-    if (!settings.ifInfectedAgain || day < 10){
+    if (!settings.ifInfectedAgain || day < 3+settings.infectedAgainLimit){
         return 0;
     }
-    return settings.data[day-7].immune + infectAgain(day-7) - settings.data[day-8].immune;
+    return settings.data[day-settings.infectedAgainLimit].immune
+            + infectAgain(day-settings.infectedAgainLimit)
+            - settings.data[day-settings.infectedAgainLimit-1].immune;
 }
 
 //计算出解除居家隔离的人数
@@ -291,9 +339,9 @@ void infectRatioUpdate(int day){
             + settings.data[day].immune
             + settings.data[day].infected));
 
-    //如果封城的话，就讲感染率下降到0.1
+    //如果封城的话，就讲感染率下降到居家感染率
     if (settings.lockedDown && settings.ifLockdown){
-        settings.infectRatio = 0.1;
+        settings.infectRatio = settings.infectRatioAtHome;
     }
 }
 
