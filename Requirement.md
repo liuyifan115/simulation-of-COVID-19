@@ -16,7 +16,7 @@
 >2. cost_of_lock_down_population -> cost_of_lock_down_population_day_x.txt
 >3. sheltered infor: ID with shelter_no -> shelter_day_x.txt
 >4. total cost: -> total_cost.txt
->5. visualization (Excel, Python, ...) of the infectionUpdate, sheleter, cost, day-by-day
+>5. visualization (Excel, Python, ...) of the infectionUpdate, shelter, cost, day-by-day
 >6. Pains & Gains via PPT
 
 According to the given information, I make following assumptions:
@@ -28,5 +28,3 @@ According to the given information, I make following assumptions:
 6. The person who has been infected will be sent to shelter after less than one day
 7. simple mode **OR** complex mode
 8. If the number of infected persons is more than one third of totalPopulation(1 000 000), the city will be locked down
-
-
