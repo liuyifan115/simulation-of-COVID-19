@@ -28,5 +28,3 @@ According to the given information, I make following assumptions:
 6. The person who has been infected will be sent to shelter after less than one day
 7. simple mode **OR** complex mode
 8. If the number of infected persons is more than one third of totalPopulation(1 000 000), the city will be locked down
-
-
