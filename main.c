@@ -1,189 +1,220 @@
 #include "stdio.h"
 #include "stdlib.h"
 
-//è¿™æ˜¯å®šä¹‰çš„æ–¹èˆ±çš„æ•°æ®ç±»å‹ï¼Œç—…äººä¼šåœ¨é‡Œé¢å¾…7å¤©ï¼Œ
+//ÕâÊÇ¶¨ÒåµÄ·½²ÕµÄÊı¾İÀàĞÍ£¬²¡ÈË»áÔÚÀïÃæ´ı7Ìì£¬
 typedef struct shelter{
-    int day[7]; //dayçš„ä¸‹æ ‡å°±è¡¨æ˜äº†ä»–åœ¨é‡Œé¢å¾…äº†å¤šå°‘å¤©
-    int total; //è¿™æ˜¯è¿™ä¸€ä¸ªæ–¹èˆ±é‡Œé¢çš„æ€»äººæ•°
+    int day[7]; //dayµÄÏÂ±ê¾Í±íÃ÷ÁËËûÔÚÀïÃæ´ıÁË¶àÉÙÌì
+    int total; //ÕâÊÇÕâÒ»¸ö·½²ÕÀïÃæµÄ×ÜÈËÊı
 }SHELTER;
 
-//è¿™æ˜¯ä¸€ä¸ªå­˜æ”¾äº†å„ç§æ•°æ®çš„æ•°æ®ç±»å‹
+//ÕâÊÇÒ»¸ö´æ·ÅÁË¸÷ÖÖÊı¾İµÄÊı¾İÀàĞÍ
 typedef struct {
-    unsigned long health; //è¿˜æœ‰å¤šå°‘äººæœªæ„ŸæŸ“
-    unsigned long infected; //å·²ç»æœ‰å¤šå°‘äººæ„ŸæŸ“äº†
-    unsigned long cured; //å·²ç»æœ‰å¤šå°‘äººæ²»æ„ˆäº†
-    unsigned long inShelter; //åœ¨æ–¹èˆ±é‡Œé¢çš„äººæ•°
-    unsigned long notInShelter; //æœªåœ¨æ–¹èˆ±é‡Œé¢ä½†æ˜¯å·²ç»æ„ŸæŸ“çš„äººæ•°
-    unsigned long long cost; //æ–¹èˆ±çš„èŠ±è´¹
-    unsigned long long lockdownCost; //å°åŸçš„èŠ±è´¹
+    unsigned long health; //»¹ÓĞ¶àÉÙÈËÎ´¸ĞÈ¾
+    unsigned long infected; //ÒÑ¾­ÓĞ¶àÉÙÈË¸ĞÈ¾ÁË
+    unsigned long immune; //ÒÑ¾­ÓĞ¶àÉÙÈËÃâÒßÁË
+    unsigned long inShelter; //ÔÚ·½²ÕÀïÃæµÄÈËÊı
+    unsigned long atHome; //¾Ó¼Ò¸ôÀëµÄÈËÊı
+    unsigned long notInShelter; //Î´ÔÚ·½²ÕÀïÃæµ«ÊÇÒÑ¾­¸ĞÈ¾µÄÈËÊı
+    unsigned long long cost; //·½²ÕµÄ»¨·Ñ
+    unsigned long long lockdownCost; //·â³ÇµÄ»¨·Ñ
 }DATA;
 
-//æ¨¡æ‹Ÿç›¸å…³çŠ¶æ€
-struct { //åŸºç¡€çŠ¶æ€
-    int days;//æ¨¡æ‹Ÿå¤©æ•°
-    DATA *data; //å­˜æ”¾æ•°æ®çš„åœ°å€
-} globe = {30,NULL};
+//³ÌĞò²ÎÊıÉèÖÃ
+struct {
+    int days;//Ä£Äâ¶àÉÙÌì
 
-struct { //æ„ŸæŸ“çŠ¶æ€
-    double what_this;//è¿™æ˜¯ä»€ä¹ˆé¬¼ï¼Ÿ
-    double infectRatio;//æ„ŸæŸ“ç‡ï¼Œæ¯”å¦‚è¯´ä¸€ä¸ªäººä¸€å¤©èƒ½ä¼ æ’­ä¸‰ä¸ªäººï¼Œé‚£ä¹ˆæ„ŸæŸ“ç‡å°±æ˜¯3
-    int ifInfectAgain;//èƒ½å¦è¢«å†æ¬¡æ„ŸæŸ“
-    int daysInfectedAgain;//æ²»æ„ˆå‡ å¤©åèƒ½å†æ¬¡è¢«æ„ŸæŸ“
-}infect = {3,3,0,0};
+    double what_this; //ÕâÊÇÊ²Ã´¹í£¿
+    double infectRatio; //¸ĞÈ¾ÂÊ£¬±ÈÈçËµÒ»¸öÈËÒ»ÌìÄÜ´«²¥Èı¸öÈË£¬ÄÇÃ´¸ĞÈ¾ÂÊ¾ÍÊÇ3
 
-struct { //é˜²æ²»æªæ–½çŠ¶æ€
-    int ifLockdown;//æ˜¯å¦ä¼šå°åŸ
-    unsigned long lockdownLimit;//æ„ŸæŸ“åˆ°å¤šå°‘äººå°±ä¼šå°åŸ
-    int ifLockedDown;//æ˜¯å¦å·²ç»å°åŸ
-    int ifAllSendToShelter;//æ¯ä¸ªæ„ŸæŸ“è€…æ˜¯å¦éƒ½å»æ–¹èˆ±
-    double rationInfectedToShelter;//æ„ŸæŸ“è€…å»æ–¹èˆ±çš„æ¯”ä¾‹
-    double infectRationInHome;//å±…å®¶å’Œå°åŸæ—¶çš„æ„ŸæŸ“ç‡
-} prevent = {0,1000000,0,1,1,0.1};
+    int ifLockdown; //ÊÇ·ñ»á·â³Ç
+    unsigned long lockdownLimit; //¸ĞÈ¾µ½¶àÉÙÈË¾Í»á·â³Ç
+    int lockedDown; //ÊÇ·ñÒÑ¾­·â³Ç
+
+    int ifStayAtHome;//ÊÇ·ñ¿ÉÒÔ¾Ó¼Ò¸ôÀë
+    double ratioStayAtHome;//¶àÉÙ±ÈÀıµÄÈË¿ÉÒÔ¾Ó¼Ò¸ôÀë
+    double infectRatioAtHome;//ÔÚ¾Ó¼ÒµÄÊ±ºòµÄ¸ĞÈ¾ÂÊ
+
+    int ifInfectedAgain;//ÊÇ·ñ»áÔÙ´Î±»¸ĞÈ¾
+    int infectedAgainLimit;//¼¸Ììºó¿ÉÒÔÔÙ´Î±»¸ĞÈ¾
+
+    DATA *data;//Êı¾İ´æ·ÅµÄµØ·½
+} settings = {50,
+              2.8,
+              2.8,
+              0,
+              0,
+              0,
+              0,
+              0.5,
+              0.1,
+              1,
+              7,
+              NULL
+};
 
 
-SHELTER shelter[3000] = {};//ä¸€å…±æœ‰3,000,000äººï¼Œä¸€ä¸ªæ–¹èˆ±èƒ½ä½1000äººï¼Œæ‰€ä»¥3000ä¸ªè¶³çŸ£
-DATA day0 = {3000000, 0, 0, 0, 0,0,0};//è¿™æ˜¯åˆå§‹çš„æ•°æ®
-DATA data[30] = {};//è¿™æ˜¯30å¤©ï¼ŒæŒ‰æ¯ä¸€å¤©å­˜æ”¾çš„æ•°æ®
+SHELTER shelter[3000] = {};//Ò»¹²ÓĞ3,000,000ÈË£¬Ò»¸ö·½²ÕÄÜ×¡1000ÈË£¬ËùÒÔ3000¸ö×ãÒÓ
+DATA day0 = {3000000, 0, 0, 0, 0,0,0};//ÕâÊÇ³õÊ¼µÄÊı¾İ
 
-//è¿™è¾¹æ˜¯å„ç§å‡½æ•°
-void dataInit();//æ•°æ®åˆå§‹åŒ–å‡½æ•°
-void infectionUpdate(int );//æ„ŸæŸ“å‡½æ•°
-void shelterUpdate(int );//å’Œæ–¹èˆ±æ•°æ®æœ‰å…³çš„å‡½æ•°
-void infectRatioUpdate(int );//æ›´æ–°æ„ŸæŸ“ç‡çš„å‡½æ•°
-int getShelterTotal(int);//è·å–ä¸€ä¸ªæ–¹èˆ±å†…æœ‰å¤šå°‘äººçš„å‡½æ•°
-void writeData(int );//å†™æ–‡ä»¶å‡½æ•°
-void whatIWant();//è¿™åˆæ˜¯ä»€ä¹ˆé¬¼ï¼Ÿ
+//Õâ±ßÊÇ¸÷ÖÖº¯Êı
+void setting();//³ÌĞòÉèÖÃ
+void consoleOutput(int );//¿ØÖÆÌ¨Êä³ö
+void dataInit();//Êı¾İ³õÊ¼»¯º¯Êı
+void infectionUpdate(int );//¸ĞÈ¾º¯Êı
+void shelterUpdate(int );//ºÍ·½²ÕÊı¾İÓĞ¹ØµÄº¯Êı
+unsigned long infectAgain(int );//ÈÃÄãÔÙ´Î±»¸ĞÈ¾
+unsigned long stayAtHome(int day);//¼ÆËã³ö½â³ı¾Ó¼Ò¸ôÀëµÄÈËÊı
+void infectRatioUpdate(int );//¸üĞÂ¸ĞÈ¾ÂÊµÄº¯Êı
+int getShelterTotal(int);//»ñÈ¡Ò»¸ö·½²ÕÄÚÓĞ¶àÉÙÈËµÄº¯Êı
+void writeData(int );//Ğ´ÎÄ¼şº¯Êı
+void whatIWant();//ÕâÓÖÊÇÊ²Ã´¹í£¿
 
 int main(){
-    //åˆ›å»ºç›®å½•æ¥å­˜æ”¾è¾“å‡ºæ–‡ä»¶
-    system("mkdir output");
+    //´´½¨Ä¿Â¼À´´æ·ÅÊä³öÎÄ¼ş
+//    system("mkdir output");
 
-    //è®¾å®šæ¨¡æ‹Ÿå¤©æ•°
-    printf("How many days will the simulation last:");
-    scanf("%d",&globe.days);
+    settings.data = (DATA *)malloc(settings.days* sizeof(DATA));
 
-    globe.data = malloc(globe.days * sizeof(DATA));
-
-    //è‡ªå®šä¹‰æ„ŸæŸ“ç‡
-    double ration;
-    printf("Set your infect ration:");
-    scanf("%lf",&ration);
-
-    //æ„ŸæŸ“ä¹‹åæ˜¯å¦ä¼šå†æ¬¡è¢«æ„ŸæŸ“
-    printf("Will the cured be infected again (0-false 1-true):");
-    scanf("%d",&infect.ifInfectAgain);
-
-    //å¦‚æœä¼šå†æ¬¡æ„ŸæŸ“ï¼Œé‚£ä¹ˆå‡ å¤©åèƒ½è¢«å†æ¬¡æ„ŸæŸ“
-    if (prevent.ifLockdown){
-        printf("When to be infected again:");
-        scanf("%d",&infect.daysInfectedAgain);
-    }
-
-    //æ˜¯å¦æ‰€æœ‰æ„ŸæŸ“è€…éƒ½å»æ–¹èˆ±
-    printf("Will all the infected be sent to shelter (0-false 1-true):");
-    scanf("%d",&prevent.ifAllSendToShelter);
-
-    //å¦‚æœä¸æ˜¯ï¼Œè®¾ç½®å»æ–¹èˆ±çš„æ„ŸæŸ“è€…æ¯”ä¾‹å’Œå±…å®¶éš”ç¦»çš„æ„ŸæŸ“ç‡
-    if (!prevent.ifAllSendToShelter){
-        printf("Set the ration of the infected sent to shelter:");
-        scanf("%lf",&prevent.rationInfectedToShelter);
-
-        printf("Set the infect ration in home or lockdown:");
-        scanf("%lf",&prevent.infectRationInHome);
-    }
-
-    //é€‰æ‹©æ˜¯å¦ä¼šå°åŸ
-    printf("If lockdown (0-false 1-true):");
-    scanf("%d",&prevent.ifLockdown);
-
-    //å¦‚æœä¼šå°åŸï¼Œé‚£ä¹ˆæ„ŸæŸ“åˆ°å¤šå°‘äººä¼šå°åŸ
-    if (prevent.ifLockdown){
-        printf("When to lockdown:");
-        scanf("%lu",&prevent.lockdownLimit);
-
-
-    }
-    //ä¿å­˜è‡ªå®šä¹‰æ•°æ®
-    infect.what_this = ration;
-    infect.infectRatio = ration;
-
-    //åˆå§‹åŒ–æ•°æ®
+    //³õÊ¼»¯Êı¾İ
     dataInit();
 
-    //æ§åˆ¶å°è¾“å‡ºï¼Œç”¨äºè°ƒè¯•
-    printf("%-12s%-12s%-12s%-12s%-12s%-12s%-12s%-12s\n","Days","Health","Infected","InShelter","NotInShelter","Cured","Cost","LockdownCost");
-    printf("%-12d%-12lu%-12lu%-12lu%-12lu%-12lu%-12llu%-12llu\n",1,globe.data[0].health,globe.data[0].infected,globe.data[0].inShelter,globe.data[0].notInShelter,globe.data[0].cured,globe.data[0].cost,globe.data[0].lockdownCost);
+
+    //¿ØÖÆÌ¨Êä³ö£¬ÓÃÓÚµ÷ÊÔ
+    printf("%-13s%-13s%-13s%-13s%-13s%-13s%-13s%-13s%-13s\n"
+           ,"Days"
+           ,"Health"
+           ,"Infected"
+           ,"InShelter"
+           ,"AtHome"
+           ,"NotInShelter"
+           ,"Immune"
+           ,"Cost"
+           ,"LockdownCost");
+    consoleOutput(0);
 
     writeData(0);
-    //ç”¨å¾ªç¯æ¨¡æ‹Ÿ30å¤©çš„æ•°æ®
-    for (int day = 1; day < globe.days; ++day) {
+    //ÓÃÑ­»·Ä£Äâ30ÌìµÄÊı¾İ
+    for (int day = 1; day < settings.days; ++day) {
         infectionUpdate(day);
         shelterUpdate(day);
         infectRatioUpdate(day);
-        printf("%-12d%-12lu%-12lu%-12lu%-12lu%-12lu%-12llu%-12llu\n",day+1,globe.data[day].health,globe.data[day].infected,globe.data[day].inShelter,globe.data[day].notInShelter,globe.data[day].cured,globe.data[day].cost,globe.data[day].lockdownCost);
-        writeData(day);
+        consoleOutput(day);
+//        writeData(day);
     }
     whatIWant();
     system("pause");
     return 0;
 }
 
-//åˆå§‹åŒ–æ•°æ®ï¼Œå…¶å®å°±æ˜¯åˆ›é€ ä¸€ä¸ªæ„ŸæŸ“è€…
-void dataInit(){
-    globe.data[0].health = day0.health - 1;
-    globe.data[0].infected = 1;
-    globe.data[0].notInShelter = 1;
+//³ÌĞòÉèÖÃ
+void setting(){
+    //×Ô¶¨Òå¸ĞÈ¾ÂÊ
+    double ration;
+    printf("Set your infect ration:");
+    scanf("%lf",&ration);
+
+    //Ñ¡ÔñÊÇ·ñ»á·â³Ç
+    printf("If lockdown (0-false 1-true):");
+    scanf("%d",&settings.ifLockdown);
+
+    //Èç¹û»á·â³Ç£¬ÄÇÃ´¸ĞÈ¾µ½¶àÉÙÈË»á·â³Ç
+    if (settings.ifLockdown == 1){
+        printf("When to lockdown:");
+        scanf("%lu",&settings.lockdownLimit);
+    }
+    //±£´æ×Ô¶¨ÒåÊı¾İ
+    settings.what_this = ration;
+    settings.infectRatio = ration;
+
 }
 
-//è¿›è¡Œæ„ŸæŸ“çš„è¿‡ç¨‹
+//¿ØÖÆÌ¨Êä³ö
+void consoleOutput(int day){
+    printf("%-13d%-13lu%-13lu%-13lu%-13lu%-13lu%-13lu%-13llu%-13llu\n"
+           ,day+1
+           ,settings.data[day].health
+           ,settings.data[day].infected
+           ,settings.data[day].inShelter
+           ,settings.data[day].atHome
+           ,settings.data[day].notInShelter
+           ,settings.data[day].immune
+           ,settings.data[day].cost
+           ,settings.data[day].lockdownCost
+           );
+}
+
+//³õÊ¼»¯Êı¾İ
+void dataInit(){
+    for (int i = 0; i < settings.days; ++i) {
+        settings.data[i].health = 0;
+        settings.data[i].infected = 0;
+        settings.data[i].notInShelter = 0;
+        settings.data[i].inShelter = 0;
+        settings.data[i].immune = 0;
+        settings.data[i].cost = 0;
+        settings.data[i].lockdownCost = 0;
+        settings.data[i].atHome = 0;
+    }
+    settings.data[0].health = day0.health - 1;
+    settings.data[0].infected = 1;
+    settings.data[0].notInShelter = 1;
+}
+
+//½øĞĞ¸ĞÈ¾µÄ¹ı³Ì
 void infectionUpdate(int day){
 
-    //æ–°æ„ŸæŸ“çš„äººæ•°å°±ç­‰äºæ²¡æœ‰è¿›æ–¹èˆ±çš„æ„ŸæŸ“è€…ä¹˜ä»¥æ„ŸæŸ“ç‡
-    unsigned long newInfected = (unsigned long)((double)globe.data[day-1].notInShelter * infect.infectRatio);
+    //ĞÂ¸ĞÈ¾µÄÈËÊı
+    unsigned long newInfected = (unsigned long)(settings.data[day-1].notInShelter * settings.infectRatio
+            + settings.infectRatioAtHome * settings.data[day-1].atHome);
 
-    //å¦‚æœæ–°æ„ŸæŸ“çš„äººæ•°è¶…è¿‡äº†å‰©ä½™å¥åº·äººæ•°ï¼Œé‚£ä¹ˆæ–°æ„ŸæŸ“äººæ•°å°±æ˜¯å‰©ä½™çš„å¥åº·äººæ•°
-    if (globe.data[day-1].health < newInfected){
-        newInfected = globe.data[day-1].health;
+
+    //Èç¹ûĞÂ¸ĞÈ¾µÄÈËÊı³¬¹ıÁËÊ£Óà½¡¿µÈËÊı£¬ÄÇÃ´ĞÂ¸ĞÈ¾ÈËÊı¾ÍÊÇÊ£ÓàµÄ½¡¿µÈËÊı
+    if (settings.data[day-1].health < newInfected){
+        newInfected = settings.data[day-1].health;
     }
 
-    //å°†ç›¸åº”æ•°æ®å†™å…¥åˆ°å½“å¤©çš„å…ƒç´ ä¸­
-    globe.data[day].notInShelter = globe.data[day-1].notInShelter + newInfected;
-    globe.data[day].infected = globe.data[day-1].infected + newInfected;
-    globe.data[day].health = globe.data[day-1].health - newInfected;
-    globe.data[day].cured = globe.data[day-1].cured;
-    globe.data[day].inShelter = globe.data[day-1].inShelter;
-    globe.data[day].cost = globe.data[day-1].cost;
-    globe.data[day].lockdownCost = globe.data[day-1].lockdownCost;
+    //½«ÏàÓ¦Êı¾İĞ´Èëµ½µ±ÌìµÄÔªËØÖĞ
+    settings.data[day].notInShelter = settings.data[day-1].notInShelter + newInfected;
+    settings.data[day].infected = settings.data[day-1].infected + newInfected;
+    settings.data[day].health = settings.data[day-1].health - newInfected;
+    settings.data[day].immune = settings.data[day - 1].immune;
+    settings.data[day].inShelter = settings.data[day-1].inShelter;
+    settings.data[day].cost = settings.data[day-1].cost;
+    settings.data[day].lockdownCost = settings.data[day-1].lockdownCost;
+    settings.data[day].atHome = settings.data[day-1].atHome;
 
-    //åˆ¤æ–­æ˜¯å¦è¦å°åŸ
-    if (globe.data[day].infected >= prevent.lockdownLimit && prevent.ifLockdown){
-        prevent.ifLockedDown = 1;
+    //ÅĞ¶ÏÊÇ·ñÒª·â³Ç
+    if (settings.data[day].infected >= settings.lockdownLimit && settings.ifLockdown){
+        settings.lockedDown = 1;
     }
 
-    //åˆ¤æ–­æ˜¯å¦è¦è§£é™¤å°åŸ
-    if (globe.data[day].infected < prevent.lockdownLimit && prevent.ifLockdown){
-        prevent.ifLockedDown = 0;
+    //ÅĞ¶ÏÊÇ·ñÒª½â³ı·â³Ç
+    if (settings.data[day].infected < settings.lockdownLimit && settings.ifLockdown){
+        settings.lockedDown = 0;
     }
 
-    //å¦‚æœå°åŸï¼Œé‚£ä¹ˆå°±åœ¨å°åŸå¼€æ”¯ä¸ŠåŠ ä¸Š6,000,000
-    if (prevent.ifLockedDown){
-        globe.data[day].lockdownCost += 60000000;
+    //Èç¹û·â³Ç£¬ÄÇÃ´¾ÍÔÚ·â³Ç¿ªÖ§ÉÏ¼ÓÉÏ6,000,000
+    if (settings.lockedDown){
+        settings.data[day].lockdownCost += 60000000;
     }
 }
 
+//ÊÕÖÎ¸ĞÈ¾ÕßµÄ¹ı³Ì
 void shelterUpdate(int day){
-    //æ–°æ²»æ„ˆçš„äººæ•°ç­‰äºæ–¹èˆ±ä¸­å‡ºæ¥çš„äººæ•°
+    //ĞÂÖÎÓúµÄÈËÊı
     unsigned long newCured = 0;
     for (int i = 0; i < 3000; ++i) {
         newCured += shelter[i].day[6];
     }
+    newCured += stayAtHome(day);
 
-    //å°†ç›¸åº”æ•°æ®å†™å…¥
-    globe.data[day].cured += newCured;
-    globe.data[day].infected -= newCured;
-    globe.data[day].inShelter -= newCured;
+    //½«ÏàÓ¦Êı¾İĞ´Èë
+    settings.data[day].immune += newCured;
+    settings.data[day].infected -= newCured;
+    settings.data[day].inShelter -= (newCured - stayAtHome(day));
+    settings.data[day].atHome -= stayAtHome(day);
 
-    //æ–¹èˆ±ä¸­ç—…äººçš„ç´¯è®¡å¤©æ•°å¢é•¿ä¸€å¤©
+    //·½²ÕÖĞ²¡ÈËµÄÀÛ¼ÆÌìÊıÔö³¤Ò»Ìì
     for (int i = 0; i < 3000; ++i) {
         for (int j = 6; j > 0; --j) {
             shelter[i].day[j] = shelter[i].day[j-1];
@@ -192,24 +223,29 @@ void shelterUpdate(int day){
         shelter[i].total = getShelterTotal(i);
     }
 
-    //å› ä¸ºè®¾ç½®ä¸ºæ„ŸæŸ“åç¬¬äºŒå¤©è¢«é€å¾€æ–¹èˆ±ï¼Œæ‰€ä»¥å½“å¤©é€åˆ°æ–¹èˆ±çš„äººæ•°åº”è¯¥æ˜¯ä¸Šä¸€å¤©æœªè¿›æ–¹èˆ±çš„æ„ŸæŸ“äººæ•°
-    unsigned long newInShelter = globe.data[day-1].notInShelter;
-    globe.data[day].inShelter += newInShelter;
-    globe.data[day].notInShelter -= newInShelter;
+    //µ±ÌìËÍµ½·½²ÕµÄÈËÊı
+    unsigned long newAtHome = (unsigned long)((double)settings.data[day-1].notInShelter * settings.ratioStayAtHome);
+    unsigned long newInShelter = settings.data[day-1].notInShelter - newAtHome;
+    settings.data[day].inShelter += newInShelter;
+    settings.data[day].notInShelter -= newInShelter;
 
-    //ä»ç¬¬ä¸€ä¸ªæ–¹èˆ±å¼€å§‹æ”¶æ²»æ„ŸæŸ“è€…
+    settings.data[day].atHome += newAtHome;
+    settings.data[day].notInShelter -= newAtHome;
+
+
+    //´ÓµÚÒ»¸ö·½²Õ¿ªÊ¼ÊÕÖÎ¸ĞÈ¾Õß
     for (int i = 0; i < 3000; ++i) {
-        //å¦‚æœæ²¡æœ‰éœ€è¦å…¥ä½çš„ï¼Œåˆ™é€€å‡ºå¾ªç¯
+        //Èç¹ûÃ»ÓĞĞèÒªÈë×¡µÄ£¬ÔòÍË³öÑ­»·
         if (newInShelter <= 0){
             break;
         }
-        //å¦‚æœå½“å‰æ–¹èˆ±å‰©ä½™ç©ºä½å°äºéœ€è¦å…¥ä½çš„æ€»äººæ•°ï¼Œåˆ™å°†æ–¹èˆ±ä½æ»¡
+        //Èç¹ûµ±Ç°·½²ÕÊ£Óà¿ÕÎ»Ğ¡ÓÚĞèÒªÈë×¡µÄ×ÜÈËÊı£¬Ôò½«·½²Õ×¡Âú
         if (newInShelter > 1000 - shelter[i].total){
             shelter[i].day[0] = 1000 - shelter[i].total;
             newInShelter -= shelter[i].day[0];
             shelter[i].total = 1000;
         }
-        //å¦åˆ™ï¼Œç›´æ¥å…¨éƒ¨ä½è¿›å»
+        //·ñÔò£¬Ö±½ÓÈ«²¿×¡½øÈ¥
         else{
             shelter[i].day[0] = (int)newInShelter;
             shelter[i].total += (int)newInShelter;
@@ -217,26 +253,53 @@ void shelterUpdate(int day){
         }
     }
 
-    //è®¡ç®—æ–¹èˆ±çš„èŠ±è´¹
+    //¼ÆËã·½²ÕµÄ»¨·Ñ
     unsigned long long newCost = 0;
     for (int i = 0; i < 3000; ++i) {
         newCost += shelter[i].total*200;
     }
-    globe.data[day].cost += newCost;
+    settings.data[day].cost += newCost;
+
+    //ÈÃÈËÄÜÔÙ´Î±»¸ĞÈ¾
+    unsigned newInfect = infectAgain(day);
+    settings.data[day].immune -= newInfect;
+    settings.data[day].health += newInfect;
 }
 
-void infectRatioUpdate(int day){
-    //å› ä¸ºé»˜è®¤æ„ŸæŸ“ä¹‹åæ— æ³•å†æ¬¡è¢«æ„ŸæŸ“ï¼Œè€Œå·²ç»è¢«æ„ŸæŸ“çš„ä¹Ÿæ— æ³•è¢«æ„ŸæŸ“ï¼Œæ‰€ä»¥æ„ŸæŸ“ç‡ä¼šéšç€å¥åº·äººæ•°çš„ä¸‹é™æœ‰æ‰€ä¸‹é™
-    infect.infectRatio = infect.what_this * ((double)globe.data[day].health / (double)(globe.data[day].health + globe.data[day].cured + globe.data[day].infected));
+//¼ÆËã³öÄÜÔÙ´Î±»¸ĞÈ¾µÄÈËÊı
+unsigned long infectAgain(int day){
+    if (!settings.ifInfectedAgain || day < 10){
+        return 0;
+    }
+    return settings.data[day-7].immune + infectAgain(day-7) - settings.data[day-8].immune;
+}
 
-    //å¦‚æœå°åŸçš„è¯ï¼Œå°±è®²æ„ŸæŸ“ç‡ä¸‹é™åˆ°0.1
-    if (prevent.ifLockedDown && prevent.ifLockdown){
-        infect.infectRatio = 0.1;
+//¼ÆËã³ö½â³ı¾Ó¼Ò¸ôÀëµÄÈËÊı
+unsigned long stayAtHome(int day){
+    if (!settings.ifStayAtHome || day < 8){
+        return 0;
+    }
+    return settings.data[day-7].atHome + stayAtHome(day-7) - settings.data[day-8].atHome;
+}
+
+//¸üĞÂ¸ĞÈ¾ÂÊ
+void infectRatioUpdate(int day){
+    //ÒòÎªÄ¬ÈÏ¸ĞÈ¾Ö®ºóÎŞ·¨ÔÙ´Î±»¸ĞÈ¾£¬¶øÒÑ¾­±»¸ĞÈ¾µÄÒ²ÎŞ·¨±»¸ĞÈ¾£¬ËùÒÔ¸ĞÈ¾ÂÊ»áËæ×Å½¡¿µÈËÊıµÄÏÂ½µÓĞËùÏÂ½µ
+    settings.infectRatio = settings.what_this
+            * ((double)settings.data[day].health
+            / (double)(settings.data[day].health
+            + settings.data[day].immune
+            + settings.data[day].infected));
+
+    //Èç¹û·â³ÇµÄ»°£¬¾Í½²¸ĞÈ¾ÂÊÏÂ½µµ½0.1
+    if (settings.lockedDown && settings.ifLockdown){
+        settings.infectRatio = 0.1;
     }
 }
 
+//»ñÈ¡·½²ÕÈËÊı
 int getShelterTotal(int index){
-    //è·å–ä¸€ä¸ªæ–¹èˆ±å†…çš„æ€»äººæ•°
+    //»ñÈ¡Ò»¸ö·½²ÕÄÚµÄ×ÜÈËÊı
     int total = 0;
     for (int i = 0; i < 7; ++i) {
         total += shelter[index].day[i];
@@ -244,14 +307,15 @@ int getShelterTotal(int index){
     return total;
 }
 
+//ÎÄ¼şÊä³ö
 void writeData(int day){
-    char filename[100] ={};//å­˜æ”¾æ–‡ä»¶åçš„å­—ç¬¦ä¸²
+    char filename[100] ={};//´æ·ÅÎÄ¼şÃûµÄ×Ö·û´®
 
-    //å†™å…¥shelter_day_x.txt
-    for (int j = 0; j < 100; ++j) { //æ¸…ç©ºfilenameå­—ç¬¦ä¸²
+    //Ğ´Èëshelter_day_x.txt
+    for (int j = 0; j < 100; ++j) { //Çå¿Õfilename×Ö·û´®
         filename[j] = 0;
     }
-    sprintf(filename,"./output/shelter_day_%d.txt",day+1); //é€šè¿‡sprintfæ¥åˆ‡æ¢æ—¥æœŸ
+    sprintf(filename,"./output/shelter_day_%d.txt",day+1); //Í¨¹ısprintfÀ´ÇĞ»»ÈÕÆÚ
     FILE *fp = fopen(filename,"w");
     fprintf(fp,"Day %d:\n",day+1);
     fprintf(fp,"ID\tDaysStayedIn(0..6)\n");
@@ -269,51 +333,51 @@ void writeData(int day){
     }
 
 
-    //å†™å…¥total_cost_day_x.txt
-    for (int j = 0; j < 100; ++j) { //æ¸…ç©ºfilenameå­—ç¬¦ä¸²
+    //Ğ´Èëtotal_cost_day_x.txt
+    for (int j = 0; j < 100; ++j) { //Çå¿Õfilename×Ö·û´®
         filename[j] = 0;
     }
-    sprintf(filename,"./output/total_cost_day_%d.txt",day+1); //é€šè¿‡sprintfæ¥åˆ‡æ¢æ—¥æœŸ
+    sprintf(filename,"./output/total_cost_day_%d.txt",day+1); //Í¨¹ısprintfÀ´ÇĞ»»ÈÕÆÚ
     fp = fopen(filename,"w");
-    fprintf(fp,"%llu",globe.data[day].cost+globe.data[day].lockdownCost);
+    fprintf(fp,"%llu",settings.data[day].cost+settings.data[day].lockdownCost);
     fclose(fp);
 
-    //å†™å…¥infected_day_x.txt
-    for (int j = 0; j < 100; ++j) { //æ¸…ç©ºfilenameå­—ç¬¦ä¸²
+    //Ğ´Èëinfected_day_x.txt
+    for (int j = 0; j < 100; ++j) { //Çå¿Õfilename×Ö·û´®
         filename[j] = 0;
     }
-    sprintf(filename,"./output/infected_day_%d.txt",day+1); //é€šè¿‡sprintfæ¥åˆ‡æ¢æ—¥æœŸ
+    sprintf(filename,"./output/infected_day_%d.txt",day+1); //Í¨¹ısprintfÀ´ÇĞ»»ÈÕÆÚ
     fp = fopen(filename,"w");
-    fprintf(fp,"%lu",globe.data[day].infected);
+    fprintf(fp,"%lu",settings.data[day].infected);
     fclose(fp);
 
-    //å†™å…¥cost_of_lock_down_population_day_x.txt
-    for (int j = 0; j < 100; ++j) { //æ¸…ç©ºfilenameå­—ç¬¦ä¸²
+    //Ğ´Èëcost_of_lock_down_population_day_x.txt
+    for (int j = 0; j < 100; ++j) { //Çå¿Õfilename×Ö·û´®
         filename[j] = 0;
     }
-    sprintf(filename,"./output/cost_of_lock_down_population_day_%d.txt",day+1); //é€šè¿‡sprintfæ¥åˆ‡æ¢æ—¥æœŸ
+    sprintf(filename,"./output/cost_of_lock_down_population_day_%d.txt",day+1); //Í¨¹ısprintfÀ´ÇĞ»»ÈÕÆÚ
     fp = fopen(filename,"w");
-    fprintf(fp,"%llu",globe.data[day].lockdownCost);
+    fprintf(fp,"%llu",settings.data[day].lockdownCost);
     fclose(fp);
 }
 
 void whatIWant(){
     FILE *fp = fopen("./output/I_want_this.csv","w");
-    for (int i = 0; i < globe.days-1; ++i) {
+    for (int i = 0; i < 29; ++i) {
         fprintf(fp,"%d,",i+1);
     }
-    fprintf(fp,"%d\n",globe.days);
-    for (int i = 0; i < globe.days-1; ++i) {
-        fprintf(fp,"%lu,",globe.data[i].infected);
+    fprintf(fp,"%d\n",30);
+    for (int i = 0; i < 29; ++i) {
+        fprintf(fp,"%lu,",settings.data[i].infected);
     }
-    fprintf(fp,"%lu\n",globe.data[globe.days-1].infected);
-    for (int i = 0; i < globe.days-1; ++i) {
-        fprintf(fp,"%lu,",globe.data[i].inShelter);
+    fprintf(fp,"%lu\n",settings.data[29].infected);
+    for (int i = 0; i < 29; ++i) {
+        fprintf(fp,"%lu,",settings.data[i].inShelter);
     }
-    fprintf(fp,"%lu\n",globe.data[globe.days-1].inShelter);
-    for (int i = 0; i < globe.days-1; ++i) {
-        fprintf(fp,"%llu,",globe.data[i].cost+globe.data[i].lockdownCost);
+    fprintf(fp,"%lu\n",settings.data[29].inShelter);
+    for (int i = 0; i < 29; ++i) {
+        fprintf(fp,"%llu,",settings.data[i].cost+settings.data[i].lockdownCost);
     }
-    fprintf(fp,"%llu\n",globe.data[globe.days-1].cost+globe.data[globe.days-1].lockdownCost);
+    fprintf(fp,"%llu\n",settings.data[29].cost+settings.data[29].lockdownCost);
     fclose(fp);
 }
