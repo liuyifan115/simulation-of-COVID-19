@@ -412,21 +412,21 @@ void writeData(int day){
 
 void whatIWant(){
     FILE *fp = fopen("./output/I_want_this.csv","w");
-    for (int i = 0; i < 29; ++i) {
+    for (int i = 0; i < settings.days-1; ++i) {
         fprintf(fp,"%d,",i+1);
     }
-    fprintf(fp,"%d\n",30);
-    for (int i = 0; i < 29; ++i) {
+    fprintf(fp,"%d\n",settings.days);
+    for (int i = 0; i < settings.days-1; ++i) {
         fprintf(fp,"%lu,",settings.data[i].infected);
     }
-    fprintf(fp,"%lu\n",settings.data[29].infected);
-    for (int i = 0; i < 29; ++i) {
+    fprintf(fp,"%lu\n",settings.data[settings.days-1].infected);
+    for (int i = 0; i < settings.days-1; ++i) {
         fprintf(fp,"%lu,",settings.data[i].inShelter);
     }
-    fprintf(fp,"%lu\n",settings.data[29].inShelter);
-    for (int i = 0; i < 29; ++i) {
+    fprintf(fp,"%lu\n",settings.data[settings.days-1].inShelter);
+    for (int i = 0; i < settings.days-1; ++i) {
         fprintf(fp,"%llu,",settings.data[i].cost+settings.data[i].lockdownCost);
     }
-    fprintf(fp,"%llu\n",settings.data[29].cost+settings.data[29].lockdownCost);
+    fprintf(fp,"%llu\n",settings.data[settings.days-1].cost+settings.data[settings.days-1].lockdownCost);
     fclose(fp);
 }
