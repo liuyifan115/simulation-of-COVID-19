@@ -106,6 +106,7 @@ int main(){
     }
     whatIWant();
     system("pause");
+    system("python chart.py");
     return 0;
 }
 
